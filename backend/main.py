@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from api.routes.health import router as health_router
+from api.routes.investigate import router as investigate_router
 from core.config import settings
 from core.logging import setup_logging
 
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(investigate_router)
 
     @app.on_event("startup")
     async def on_startup() -> None:
