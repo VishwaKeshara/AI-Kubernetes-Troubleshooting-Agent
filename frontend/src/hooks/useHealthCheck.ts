@@ -1,0 +1,16 @@
+import { useQuery } from "@tanstack/react-query";
+
+import { apiClient } from "@/services/api";
+import type { HealthResponse } from "@/types";
+
+export function useHealthCheck() {
+  return useQuery<HealthResponse>({
+    queryKey: ["health"],
+    queryFn: async () => {
+      const response = await apiClient.get<HealthResponse>("/health");
+      return response.data;
+    },
+    retry: 1,
+    refetchInterval: 30000,
+  });
+}
