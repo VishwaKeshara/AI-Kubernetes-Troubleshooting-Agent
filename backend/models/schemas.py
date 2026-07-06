@@ -24,6 +24,10 @@ class DiagnosisPayload(BaseModel):
     confidence_reasoning: str = ""
 
 
+class InvestigateRequest(BaseModel):
+    investigation_id: str | None = None
+
+
 class InvestigateResponse(BaseModel):
     status: str = Field(default="success")
     investigation: InvestigationPayload
