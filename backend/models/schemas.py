@@ -14,6 +14,17 @@ class InvestigationPayload(BaseModel):
     network: dict
 
 
+class DiagnosisPayload(BaseModel):
+    root_cause: str
+    explanation: str
+    fix: str
+    kubectl_command: str
+    prevention_recommendation: str
+    confidence: int = Field(ge=0, le=100)
+    confidence_reasoning: str = ""
+
+
 class InvestigateResponse(BaseModel):
     status: str = Field(default="success")
     investigation: InvestigationPayload
+    diagnosis: DiagnosisPayload

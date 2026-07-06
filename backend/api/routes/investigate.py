@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from models.schemas import InvestigateResponse, InvestigationPayload
+from ai.agent import KubernetesAIAgent
+from models.schemas import DiagnosisPayload, InvestigateResponse, InvestigationPayload
 from services.investigation import InvestigationService
 
 router = APIRouter(tags=["investigation"])
@@ -11,9 +12,12 @@ router = APIRouter(tags=["investigation"])
 def investigate_cluster() -> InvestigateResponse:
     try:
         investigation = InvestigationService().run_investigation()
+        diagnosis = KubernetesAIAgent().diagnose(investigation)
+
         return InvestigateResponse(
             status="success",
             investigation=InvestigationPayload(**investigation),
+            diagnosis=DiagnosisPayload(**diagnosis),
         )
     except Exception as exc:
         logger.exception("Investigation failed")

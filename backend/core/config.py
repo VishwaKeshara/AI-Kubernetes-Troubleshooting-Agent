@@ -13,8 +13,10 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
 
     openrouter_api_key: str = ""
-    openrouter_model: str = ""
+    openrouter_model: str = "openai/gpt-4o-mini"
     kubeconfig_path: str = ""
+    openrouter_timeout: float = 60.0
+    openrouter_max_retries: int = 3
 
 
 settings = Settings()
