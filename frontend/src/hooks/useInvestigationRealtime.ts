@@ -1,30 +1,101 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
 import { insforge } from "@/lib/insforge";
-import type { InvestigationProgressEvent } from "@/types";
+import {
+  INVESTIGATION_STEPS,
+  type InvestigationProgressEvent,
+  type ProgressStep,
+} from "@/types";
 
-export async function subscribeToInvestigationChannel(
-  investigationId: string,
-  onProgress: (event: InvestigationProgressEvent) => void,
-): Promise<() => void> {
-  const handler = (payload: unknown) => {
-    const event = payload as InvestigationProgressEvent;
-    if (event.step && event.label && event.status) {
-      onProgress(event);
+export function useInvestigationRealtime(investigationId: string | null) {
+  const [steps, setSteps] = useState<ProgressStep[]>(INVESTIGATION_STEPS);
+
+  const applyProgress = useCallback((event: InvestigationProgressEvent) => {
+    setSteps((current) =>
+      current.map((step) => {
+        if (step.id === event.step) {
+          return {
+            ...step,
+            label: event.label,
+            status: event.status,
+          };
+        }
+
+        if (event.status === "running") {
+          const stepIndex = current.findIndex((item) => item.id === event.step);
+          const currentIndex = current.findIndex((item) => item.id === step.id);
+          if (currentIndex < stepIndex && step.status !== "complete") {
+            return { ...step, status: "complete" };
+          }
+        }
+
+        return step;
+      }),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!investigationId) {
+      setSteps(INVESTIGATION_STEPS);
+      return;
     }
-  };
 
-  insforge.realtime.on("investigation_progress", handler);
-  await insforge.realtime.connect();
+    let isActive = true;
 
-  const response = await insforge.realtime.subscribe(
-    `investigation:${investigationId}`,
-  );
+    const setupRealtime = async () => {
+      setSteps(
+        INVESTIGATION_STEPS.map((step, index) => ({
+          ...step,
+          status: index === 0 ? "running" : "pending",
+        })),
+      );
 
-  if (!response.ok) {
-    console.error("Failed to subscribe to investigation channel", response.error);
-  }
+      insforge.realtime.on("investigation_progress", (payload) => {
+        if (!isActive) {
+          return;
+        }
 
-  return () => {
-    insforge.realtime.off("investigation_progress", handler);
-    insforge.realtime.unsubscribe(`investigation:${investigationId}`);
-  };
+        const event = payload as unknown as InvestigationProgressEvent;
+        if (event.step && event.label && event.status) {
+          applyProgress(event);
+        }
+      });
+
+      await insforge.realtime.connect();
+      const response = await insforge.realtime.subscribe(
+        `investigation:${investigationId}`,
+      );
+
+      if (!response.ok) {
+        console.error("Failed to subscribe to investigation channel", response.error);
+      }
+    };
+
+    setupRealtime().catch((error) => {
+      console.error("Realtime setup failed", error);
+    });
+
+    return () => {
+      isActive = false;
+      insforge.realtime.off("investigation_progress");
+      insforge.realtime.unsubscribe(`investigation:${investigationId}`);
+    };
+  }, [investigationId, applyProgress]);
+
+  const markAllComplete = useCallback(() => {
+    setSteps((current) =>
+      current.map((step) => ({
+        ...step,
+        status: "complete",
+      })),
+    );
+  }, []);
+
+  const resetSteps = useCallback(() => {
+    setSteps(INVESTIGATION_STEPS);
+  }, []);
+
+  return { steps, markAllComplete, resetSteps };
 }

@@ -21,10 +21,7 @@ export function InvestigationProgress({
   steps,
   isInvestigating,
 }: InvestigationProgressProps) {
-  const hasActivity =
-    isInvestigating || steps.some((step) => step.status !== "pending");
-
-  if (!hasActivity) {
+  if (!isInvestigating && steps.every((step) => step.status === "pending")) {
     return null;
   }
 

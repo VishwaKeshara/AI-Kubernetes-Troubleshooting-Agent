@@ -3,19 +3,19 @@
 import { useCallback, useState } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
-import { subscribeToInvestigationChannel } from "@/hooks/useInvestigationRealtime";
-import { useInvestigationSteps } from "@/hooks/useInvestigationSteps";
-import { getInvestigationErrorMessage, runInvestigation } from "@/services/api";
+import { useInvestigationRealtime } from "@/hooks/useInvestigationRealtime";
+import { runInvestigation } from "@/services/api";
 import { saveInvestigationHistory } from "@/services/investigations";
-import type { Diagnosis } from "@/types";
+import type { Diagnosis, InvestigationResult } from "@/types";
 
 export function useInvestigation(onHistorySaved: () => void) {
   const { user } = useAuth();
+  const [investigationId, setInvestigationId] = useState<string | null>(null);
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
-  const { steps, applyProgress, markAllComplete, resetSteps, startSteps } =
-    useInvestigationSteps();
+  const { steps, markAllComplete, resetSteps } =
+    useInvestigationRealtime(investigationId);
 
   const investigate = useCallback(async () => {
     if (!user) {
@@ -23,33 +23,27 @@ export function useInvestigation(onHistorySaved: () => void) {
       return;
     }
 
-    const investigationId = crypto.randomUUID();
+    const id = crypto.randomUUID();
+    setInvestigationId(id);
     setIsInvestigating(true);
     setError(null);
     setDiagnosis(null);
     resetSteps();
-    startSteps();
-
-    let unsubscribe: (() => void) | undefined;
 
     try {
-      unsubscribe = await subscribeToInvestigationChannel(
-        investigationId,
-        applyProgress,
-      );
-
-      const result = await runInvestigation(investigationId);
+      const result: InvestigationResult = await runInvestigation(id);
       markAllComplete();
       setDiagnosis(result.diagnosis);
       await saveInvestigationHistory(user.id, result);
       onHistorySaved();
     } catch (err) {
-      setError(getInvestigationErrorMessage(err));
+      const message =
+        err instanceof Error ? err.message : "Investigation failed unexpectedly.";
+      setError(message);
     } finally {
-      unsubscribe?.();
       setIsInvestigating(false);
     }
-  }, [user, applyProgress, markAllComplete, resetSteps, startSteps, onHistorySaved]);
+  }, [user, markAllComplete, resetSteps, onHistorySaved]);
 
   return {
     steps,

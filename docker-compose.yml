@@ -9,6 +9,8 @@ services:
       - ./backend/.env
     environment:
       - CORS_ORIGINS=["http://localhost:3000"]
+      - INSFORGE_BASE_URL=https://n4tj8e34.us-east.insforge.app
+      - INSFORGE_ANON_KEY=${INSFORGE_ANON_KEY:-anon_9838ab8046f1eeb90c3c6588a85be8ff1f8f36a28aca6396965767142da3802e}
     volumes:
       - ./backend:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -19,8 +21,8 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
-        NEXT_PUBLIC_INSFORGE_BASE_URL: ${NEXT_PUBLIC_INSFORGE_BASE_URL:-https://n4tj8e34.us-east.insforge.app}
-        NEXT_PUBLIC_INSFORGE_ANON_KEY: ${NEXT_PUBLIC_INSFORGE_ANON_KEY}
+        NEXT_PUBLIC_INSFORGE_BASE_URL: https://n4tj8e34.us-east.insforge.app
+        NEXT_PUBLIC_INSFORGE_ANON_KEY: anon_9838ab8046f1eeb90c3c6588a85be8ff1f8f36a28aca6396965767142da3802e
     ports:
       - "3000:3000"
     env_file:

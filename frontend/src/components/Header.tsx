@@ -1,17 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { useAuth } from "@/components/AuthProvider";
 
 export function Header() {
-  const router = useRouter();
   const { user, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace("/sign-in");
-  };
 
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
@@ -25,7 +17,7 @@ export function Header() {
           <span className="text-sm text-slate-600">{user.email}</span>
           <button
             type="button"
-            onClick={handleSignOut}
+            onClick={() => signOut()}
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
           >
             Sign Out
