@@ -28,9 +28,10 @@ class KubectlResult:
 class KubectlExecutor:
     """Safely execute kubectl commands and return structured output."""
 
-    def __init__(self, kubeconfig_path: str | None = None, timeout: int = 60) -> None:
+    def __init__(self, kubeconfig_path: str | None = None, timeout: int = 60, context: str | None = None) -> None:
         self.kubeconfig_path = kubeconfig_path or settings.kubeconfig_path or None
         self.timeout = timeout
+        self.context = context
 
     def run(self, *args: str) -> KubectlResult:
         command = self._build_command(*args)
@@ -89,5 +90,7 @@ class KubectlExecutor:
         command = ["kubectl"]
         if self.kubeconfig_path:
             command.extend(["--kubeconfig", self.kubeconfig_path])
+        if self.context:
+            command.extend(["--context", self.context])
         command.extend(args)
         return command

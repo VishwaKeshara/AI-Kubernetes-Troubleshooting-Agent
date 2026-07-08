@@ -17,7 +17,7 @@ export function useInvestigation(onHistorySaved: () => void) {
   const { steps, markAllComplete, resetSteps } =
     useInvestigationRealtime(investigationId);
 
-  const investigate = useCallback(async () => {
+  const investigate = useCallback(async (selectedContext?: string) => {
     if (!user) {
       setError("You must be signed in to investigate.");
       return;
@@ -31,7 +31,7 @@ export function useInvestigation(onHistorySaved: () => void) {
     resetSteps();
 
     try {
-      const result: InvestigationResult = await runInvestigation(id);
+      const result: InvestigationResult = await runInvestigation(id, selectedContext);
       markAllComplete();
       setDiagnosis(result.diagnosis);
       await saveInvestigationHistory(user.id, result);

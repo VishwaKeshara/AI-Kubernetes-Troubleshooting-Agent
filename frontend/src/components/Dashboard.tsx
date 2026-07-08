@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
 import { DiagnosisCard } from "@/components/DiagnosisCard";
@@ -12,6 +12,7 @@ import { InvestigateButton } from "@/components/InvestigateButton";
 import { useInvestigation } from "@/hooks/useInvestigation";
 import { useInvestigationHistory } from "@/hooks/useInvestigationHistory";
 import { useHealthCheck } from "@/hooks/useHealthCheck";
+import { fetchContexts } from "@/services/api";
 
 export function Dashboard() {
   const router = useRouter();
@@ -21,6 +22,20 @@ export function Dashboard() {
     useInvestigationHistory();
   const { steps, diagnosis, error, isInvestigating, investigate } =
     useInvestigation(reload);
+
+  const [contexts, setContexts] = useState<string[]>([]);
+  const [selectedContext, setSelectedContext] = useState<string>("");
+
+  useEffect(() => {
+    if (user) {
+      fetchContexts().then((list) => {
+        setContexts(list);
+        if (list.length > 0) {
+          setSelectedContext(list[0]);
+        }
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -61,11 +76,34 @@ export function Dashboard() {
               </p>
             </div>
 
-            <InvestigateButton
-              onClick={investigate}
-              disabled={!backendReady}
-              loading={isInvestigating}
-            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {contexts.length > 0 ? (
+                <div className="flex flex-col">
+                  <label htmlFor="context-select" className="text-xs font-semibold text-slate-500 mb-1">
+                    Select Cluster
+                  </label>
+                  <select
+                    id="context-select"
+                    value={selectedContext}
+                    onChange={(e) => setSelectedContext(e.target.value)}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    disabled={isInvestigating || !backendReady}
+                  >
+                    {contexts.map((ctx) => (
+                      <option key={ctx} value={ctx}>
+                        {ctx}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
+              <InvestigateButton
+                onClick={() => investigate(selectedContext)}
+                disabled={!backendReady || (contexts.length > 0 && !selectedContext)}
+                loading={isInvestigating}
+              />
+            </div>
           </div>
 
           {error ? (

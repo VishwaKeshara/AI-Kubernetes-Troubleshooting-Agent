@@ -26,6 +26,7 @@ class DiagnosisPayload(BaseModel):
 
 class InvestigateRequest(BaseModel):
     investigation_id: str | None = None
+    context: str | None = None
 
 
 class InvestigateResponse(BaseModel):

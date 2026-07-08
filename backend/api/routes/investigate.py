@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 
 from ai.agent import KubernetesAIAgent
+from kubernetes.kubectl import KubectlExecutor
 from models.schemas import (
     DiagnosisPayload,
     InvestigateRequest,
@@ -14,6 +15,22 @@ from services.progress_publisher import ProgressPublisher
 router = APIRouter(tags=["investigation"])
 
 
+@router.get("/contexts")
+def get_contexts():
+    try:
+        executor = KubectlExecutor()
+        res = executor.run("config", "get-contexts", "-o", "name")
+        if res.success:
+            contexts = [line.strip() for line in res.stdout.splitlines() if line.strip()]
+            return {"contexts": contexts}
+        else:
+            logger.warning("Failed to run config get-contexts: {}", res.stderr)
+            return {"contexts": []}
+    except Exception as exc:
+        logger.exception("Failed to get contexts")
+        return {"contexts": []}
+
+
 @router.post("/investigate", response_model=InvestigateResponse)
 def investigate_cluster(request: InvestigateRequest = InvestigateRequest()) -> InvestigateResponse:
     try:
@@ -21,7 +38,7 @@ def investigate_cluster(request: InvestigateRequest = InvestigateRequest()) -> I
         if request.investigation_id:
             publisher = ProgressPublisher(request.investigation_id)
 
-        investigation = InvestigationService().run_investigation(
+        investigation = InvestigationService(context=request.context).run_investigation(
             on_progress=publisher.callback if publisher else None,
         )
 

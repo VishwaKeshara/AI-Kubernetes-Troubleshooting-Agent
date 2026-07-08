@@ -15,8 +15,8 @@ ProgressCallback = Callable[[str, str, str], None]
 class InvestigationService:
     """Orchestrate Kubernetes evidence collection like a junior DevOps engineer."""
 
-    def __init__(self, executor: KubectlExecutor | None = None) -> None:
-        self.executor = executor or KubectlExecutor()
+    def __init__(self, executor: KubectlExecutor | None = None, context: str | None = None) -> None:
+        self.executor = executor or KubectlExecutor(context=context)
         self.pod_inspector = PodInspector(self.executor)
         self.logs_collector = LogsCollector(self.executor)
         self.events_analyzer = EventsAnalyzer(self.executor)
@@ -79,5 +79,5 @@ class InvestigationService:
             on_progress(step, label, status)
 
 
-def run_investigation(on_progress: ProgressCallback | None = None) -> dict:
-    return InvestigationService().run_investigation(on_progress=on_progress)
+def run_investigation(on_progress: ProgressCallback | None = None, context: str | None = None) -> dict:
+    return InvestigationService(context=context).run_investigation(on_progress=on_progress)

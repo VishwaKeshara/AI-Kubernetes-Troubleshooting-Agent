@@ -15,9 +15,21 @@ export const apiClient = axios.create({
 
 export async function runInvestigation(
   investigationId: string,
+  context?: string,
 ): Promise<InvestigationResult> {
   const response = await apiClient.post<InvestigationResult>("/investigate", {
     investigation_id: investigationId,
+    context: context || undefined,
   });
   return response.data;
+}
+
+export async function fetchContexts(): Promise<string[]> {
+  try {
+    const response = await apiClient.get<{ contexts: string[] }>("/contexts");
+    return response.data.contexts;
+  } catch (error) {
+    console.error("Failed to fetch contexts", error);
+    return [];
+  }
 }
