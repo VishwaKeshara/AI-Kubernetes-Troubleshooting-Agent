@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Kubernetes Troubleshooting Agent",
-  description: "Diagnose and troubleshoot your Kubernetes clusters with AI.",
+  title: "AI Kubernetes Agent",
+  description: "On-demand Kubernetes troubleshooting with AI",
 };
 
 export default function RootLayout({
@@ -13,8 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-slate-900 text-slate-100 min-h-screen">
-        {children}
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -1,0 +1,25 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    app_name: str = "ai-kubernetes-agent"
+    debug: bool = False
+    cors_origins: list[str] = ["http://localhost:3000"]
+
+    openrouter_api_key: str = ""
+    openrouter_model: str = "openai/gpt-4o-mini"
+    kubeconfig_path: str = ""
+    openrouter_timeout: float = 60.0
+    openrouter_max_retries: int = 3
+
+    insforge_base_url: str = "https://n4tj8e34.us-east.insforge.app"
+    insforge_anon_key: str = ""
+
+
+settings = Settings()

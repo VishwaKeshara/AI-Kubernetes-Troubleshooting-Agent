@@ -1,56 +1,38 @@
-import sys
-import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
+from api.routes.health import router as health_router
+from api.routes.investigate import router as investigate_router
+from core.config import settings
+from core.logging import setup_logging
+
+
+def create_app() -> FastAPI:
+    setup_logging()
+
+    app = FastAPI(
+        title="AI Kubernetes Agent",
+        description="On-demand Kubernetes troubleshooting with AI",
+        version="0.1.0",
     )
-    openrouter_api_key: str = ""
-    openrouter_model: str = "openai/gpt-4o-mini"
-    kubeconfig_path: str = ""
-    cors_origins: str = '["http://localhost:3000"]'
 
-settings = Settings()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-# Setup logging
-logger.remove()
-logger.add(
-    sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO",
-)
+    app.include_router(health_router)
+    app.include_router(investigate_router)
 
-app = FastAPI(title="AI Kubernetes Troubleshooting Agent Backend")
+    @app.on_event("startup")
+    async def on_startup() -> None:
+        logger.info("Starting {}", settings.app_name)
 
-# Configure CORS
-try:
-    origins = json.loads(settings.cors_origins)
-except Exception:
-    origins = ["http://localhost:3000"]
+    return app
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Starting AI Kubernetes Troubleshooting Agent backend...")
-    logger.info(f"Loaded config: MODEL={settings.openrouter_model}, KUBECONFIG={settings.kubeconfig_path}")
-
-@app.get("/health")
-async def health_check():
-    logger.info("Health check endpoint hit")
-    return {
-        "status": "healthy",
-        "service": "ai-kubernetes-agent"
-    }
+app = create_app()
