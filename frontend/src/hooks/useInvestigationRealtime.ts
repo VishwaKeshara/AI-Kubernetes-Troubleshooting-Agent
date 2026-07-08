@@ -44,6 +44,17 @@ export function useInvestigationRealtime(investigationId: string | null) {
 
     let isActive = true;
 
+    const onProgress = (payload: unknown) => {
+      if (!isActive) {
+        return;
+      }
+
+      const event = payload as unknown as InvestigationProgressEvent;
+      if (event.step && event.label && event.status) {
+        applyProgress(event);
+      }
+    };
+
     const setupRealtime = async () => {
       setSteps(
         INVESTIGATION_STEPS.map((step, index) => ({
@@ -52,16 +63,7 @@ export function useInvestigationRealtime(investigationId: string | null) {
         })),
       );
 
-      insforge.realtime.on("investigation_progress", (payload) => {
-        if (!isActive) {
-          return;
-        }
-
-        const event = payload as unknown as InvestigationProgressEvent;
-        if (event.step && event.label && event.status) {
-          applyProgress(event);
-        }
-      });
+      insforge.realtime.on("investigation_progress", onProgress);
 
       await insforge.realtime.connect();
       const response = await insforge.realtime.subscribe(
@@ -79,7 +81,7 @@ export function useInvestigationRealtime(investigationId: string | null) {
 
     return () => {
       isActive = false;
-      insforge.realtime.off("investigation_progress");
+      insforge.realtime.off("investigation_progress", onProgress);
       insforge.realtime.unsubscribe(`investigation:${investigationId}`);
     };
   }, [investigationId, applyProgress]);
