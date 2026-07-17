@@ -2,7 +2,7 @@ import { createClient } from "@insforge/sdk";
 
 const baseUrl =
   process.env.NEXT_PUBLIC_INSFORGE_BASE_URL ??
-  "https://n4tj8e34.us-east.insforge.app";
+  "https://icxn67z7.us-east.insforge.app";
 
 const anonKey = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY ?? "";
 

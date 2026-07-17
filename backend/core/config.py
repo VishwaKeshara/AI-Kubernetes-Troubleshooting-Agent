@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     openrouter_timeout: float = 60.0
     openrouter_max_retries: int = 3
 
-    insforge_base_url: str = "https://n4tj8e34.us-east.insforge.app"
+    insforge_base_url: str = "https://icxn67z7.us-east.insforge.app"
     insforge_anon_key: str = ""
 
 
