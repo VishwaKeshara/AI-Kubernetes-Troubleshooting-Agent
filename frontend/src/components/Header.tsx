@@ -5,25 +5,29 @@ import { useAuth } from "@/components/AuthProvider";
 export function Header() {
   const { user, signOut } = useAuth();
 
+  if (!user) return null;
+
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">AI Kubernetes Agent</h1>
-        <p className="text-sm text-slate-500">Troubleshoot Kubernetes with AI</p>
+    <header className="mx-auto max-w-7xl flex items-center justify-between px-6 py-5 bg-transparent">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/10 ring-1 ring-blue-400/20">
+          <svg className="h-5.5 w-5.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">Signed in as</span>
+          <span className="text-sm font-medium text-slate-200">{user.email}</span>
+        </div>
       </div>
 
-      {user ? (
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-slate-600">{user.email}</span>
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-          >
-            Sign Out
-          </button>
-        </div>
-      ) : null}
+      <button
+        type="button"
+        onClick={() => signOut()}
+        className="text-sm font-medium text-slate-400 transition-colors hover:text-white focus:outline-none"
+      >
+        Sign out
+      </button>
     </header>
   );
 }
