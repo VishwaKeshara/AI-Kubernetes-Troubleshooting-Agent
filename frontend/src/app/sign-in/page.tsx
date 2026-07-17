@@ -8,9 +8,10 @@ import { useAuth } from "@/components/AuthProvider";
 export default function SignInPage() {
   const router = useRouter();
   const { user, isLoading, signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const [mode, setMode] = useState<"sign-in" | "sign-up" | "verify">("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,6 +26,22 @@ export default function SignInPage() {
     setIsSubmitting(true);
     setMessage(null);
 
+    if (mode === "verify") {
+      const { insforge } = await import("@/lib/insforge");
+      const { data, error } = await insforge.auth.verifyEmail({
+        email,
+        otp,
+      });
+      if (error) {
+        setMessage(error.message ?? "Verification failed");
+      } else {
+        setMessage("Email verified successfully! You can now sign in.");
+        setMode("sign-in");
+      }
+      setIsSubmitting(false);
+      return;
+    }
+
     const result =
       mode === "sign-in"
         ? await signIn(email, password)
@@ -32,6 +49,9 @@ export default function SignInPage() {
 
     if (result) {
       setMessage(result);
+      if (mode === "sign-up" && result.includes("verification code")) {
+        setMode("verify");
+      }
       setIsSubmitting(false);
       return;
     }
@@ -54,7 +74,7 @@ export default function SignInPage() {
         <div className="mt-6 flex gap-2">
           <button
             type="button"
-            onClick={() => setMode("sign-in")}
+            onClick={() => { setMode("sign-in"); setMessage(null); }}
             className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium ${
               mode === "sign-in"
                 ? "bg-primary-600 text-white"
@@ -65,7 +85,7 @@ export default function SignInPage() {
           </button>
           <button
             type="button"
-            onClick={() => setMode("sign-up")}
+            onClick={() => { setMode("sign-up"); setMessage(null); }}
             className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium ${
               mode === "sign-up"
                 ? "bg-primary-600 text-white"
@@ -73,6 +93,17 @@ export default function SignInPage() {
             }`}
           >
             Sign Up
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode("verify"); setMessage(null); }}
+            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium ${
+              mode === "verify"
+                ? "bg-primary-600 text-white"
+                : "bg-slate-100 text-slate-700"
+            }`}
+          >
+            Verify
           </button>
         </div>
 
@@ -91,23 +122,45 @@ export default function SignInPage() {
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-slate-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
-            />
-          </div>
+          {mode !== "verify" && (
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
+              />
+            </div>
+          )}
+
+          {mode === "verify" && (
+            <div>
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Verification Code (OTP)
+              </label>
+              <input
+                id="otp"
+                type="text"
+                required
+                placeholder="123456"
+                value={otp}
+                onChange={(event) => setOtp(event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
+              />
+            </div>
+          )}
 
           {message ? (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -124,7 +177,9 @@ export default function SignInPage() {
               ? "Please wait..."
               : mode === "sign-in"
                 ? "Sign In"
-                : "Create Account"}
+                : mode === "sign-up"
+                  ? "Create Account"
+                  : "Verify Email"}
           </button>
         </form>
       </div>
