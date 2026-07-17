@@ -92,5 +92,7 @@ class KubectlExecutor:
             command.extend(["--kubeconfig", self.kubeconfig_path])
         if self.context:
             command.extend(["--context", self.context])
+        # Skip TLS verification because host.docker.internal is not in the certificate SAN list
+        command.append("--insecure-skip-tls-verify=true")
         command.extend(args)
         return command
