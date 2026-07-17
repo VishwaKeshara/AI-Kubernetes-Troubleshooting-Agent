@@ -13,6 +13,9 @@ services:
       - INSFORGE_ANON_KEY=${INSFORGE_ANON_KEY:-anon_4bc36a1280391d90d9103aa5b4e50ba79b188ae70b27def01c7735cba14709d0}
     volumes:
       - ./backend:/app
+      - ~/.kube/config:/app/kubeconfig-host:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
